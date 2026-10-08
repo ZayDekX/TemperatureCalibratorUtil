@@ -9,33 +9,12 @@ namespace TemperatureCalibratorUtil;
 /// </summary>
 public partial class App : Application
 {
-    public App()
-    {
-        //var config = JsonSerializer.Deserialize<DataFetcherConfig>(File.ReadAllText("config.json"));
-        Fetcher = new(new()
-        {
-            Period = 500
-        });
-
-        _tokenSource = new();
-    }
-
-    private CancellationTokenSource _tokenSource;
-
-    protected override void OnStartup(StartupEventArgs e)
-    {
-        base.OnStartup(e);
-
-        Fetcher.StartAsync(_tokenSource.Token);
-    }
-
-    public DataFetcher Fetcher { get; }
 }
 
 public class DataFetcherConfig
 {
     public ushort Port { get; set; } = 21316;
-    public int Period { get; set; } = 500;
+    public int Period { get; set; } = 50;
     public string Host { get; set; } = "127.0.0.1";
 }
 

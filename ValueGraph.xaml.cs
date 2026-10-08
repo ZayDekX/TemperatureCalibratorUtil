@@ -21,61 +21,52 @@ public partial class ValueGraphViewModel : ObservableObject
     public ValueGraphViewModel()
     {
         var count = 250;
-
-        _ = ReadData();
-        Values = new DateTimePoint[count];
-
         var time = DateTime.Now;
+        Values = [];
+
         for (var i = 0; i < count; i++)
         {
-            Values[i] = new(time, null);
+            Values.Add(new(time, null));
         }
 
-        Separators = new([0,0,0,0,0,0]);
+        Separators = new([0, 0, 0, 0, 0, 0]);
     }
 
     public ObservableCollection<double> Separators { get; set; }
 
-    public DateTimePoint[] Values { get; set; }
+    public ObservableCollection<DateTimePoint> Values { get; set; }
 
     public Func<DateTime, string> LabelsFormatter { get; } = Formatter;
 
     public object Sync { get; } = new object();
 
-    public bool IsReading { get; set; } = true;
-
-    private async Task ReadData()
-    {
-        var random = new Random();
-
-        while (IsReading)
-        {
-            await Task.Delay(100);
-
-            AddPoint(DateTime.Now, random.Next(0, 10));
-        }
-    }
-
     public void AddPoint(DateTime time, double value)
     {
         // to avoid unnecessary allocations, just move all points towards beginning and write first point to the end of list
         // so technically we just copy contiguous array of pointers into itself
-
-        var firstPoint = Values[0];
-        var span = Values.AsSpan();
-        span[1..].CopyTo(span);
-
-        // and set incoming value to the last item
-
-        span[^1] = firstPoint;
-        firstPoint.Value = value;
-        firstPoint.DateTime = time;
-
-        var separatorCount = Separators.Count;
-
-        for (var i = 0; i < separatorCount; i++)
+        lock (Sync)
         {
-            Separators[i] = time.AddSeconds(-5 * (separatorCount - i)).Ticks;
+
+            for (var i = 1; i < Values.Count; i++)
+            {
+                var prev = Values[i - 1];
+                var current = Values[i];
+
+                prev.Value = current.Value;
+                prev.DateTime = current.DateTime;
+            }
+
+            var lastPoint = Values[^1];
+
+            lastPoint.Value = value;
+            lastPoint.DateTime = time;
+
+            var separatorCount = Separators.Count;
+
+            for (var i = 0; i < separatorCount; i++)
+            {
+                Separators[i] = time.AddSeconds(-5 * (separatorCount - i)).Ticks;
+            }
         }
     }
 
