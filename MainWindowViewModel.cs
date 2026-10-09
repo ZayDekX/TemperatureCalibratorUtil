@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace TemperatureCalibratorUtil;
@@ -8,66 +7,40 @@ public partial class MainWindowViewModel : ObservableObject
 {
     public MainWindowViewModel()
     {
-        var config = new DataFetcherConfig();
+        var config = new Config();
 
-        _controller = new()
-        {
-            DFilterCoeff = 0.25,
-            Kp = 6,
-            Ki = 0.125,
-            Kd = 0.8,
-            MinOutput = 0,
-            MaxOutput = 470
-        };
+        _runner = new SystemRunner(config);
 
-        _fetcher = new(config);
-        _fetcher.Read += OnRead;
+        Graphs = [.. config.Graphs.Select(x => new ValueGraphViewModel(x.Name, x.ParameterId))];
+        _runner.Device.Read += OnRead;
     }
 
-    private readonly DataFetcher _fetcher;
-    private readonly PIDController _controller;
+    private SystemRunner _runner;
 
     /// <summary>
     /// Graphs that should be displayed
     /// </summary>
-    public ValueGraphViewModel[] Graphs { get; } = [new(), new()];
+    public ValueGraphViewModel[] Graphs { get; }
 
     [RelayCommand]
     private void Start()
     {
-        var startSource = new CancellationTokenSource();
-        _fetcher.StartAsync(startSource.Token);
+        _runner.Start();
     }
 
     [RelayCommand]
     public void Stop()
     {
-        var stopSource = new CancellationTokenSource();
-        _fetcher.StopAsync(stopSource.Token);
+        _runner.Stop();
     }
-
-    private long _lastStamp = 0;
 
     private void OnRead()
     {
-        if(_lastStamp is 0)
-        {
-            _lastStamp = Stopwatch.GetTimestamp();
-        }
-        var rawValues = _fetcher.Values;
-
         var time = DateTime.Now;
 
-        var a = rawValues[0] / 10d;
-        var b = rawValues[2] / 10d;
-
-        Graphs[0].AddPoint(time, a);
-        Graphs[1].AddPoint(time, b);
-
-        var stamp = Stopwatch.GetTimestamp();
-        var newSetpoint = _controller.Compute(50, a, Stopwatch.GetElapsedTime(_lastStamp, stamp).TotalSeconds);
-        _lastStamp = stamp;
-
-        _fetcher.Write([(ushort)(newSetpoint * 10), 1]);
+        foreach (var graph in Graphs)
+        {
+            graph.AddPoint(time, _runner.Device.Inputs[graph.ParameterId]);
+        }
     }
 }
