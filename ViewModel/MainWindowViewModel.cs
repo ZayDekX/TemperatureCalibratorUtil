@@ -1,21 +1,20 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TemperatureCalibratorUtil.Configuration;
+using TemperatureCalibratorUtil.Model;
 
-namespace TemperatureCalibratorUtil;
+namespace TemperatureCalibratorUtil.ViewModel;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    public MainWindowViewModel()
+    private readonly SystemRunner _runner;
+
+    public MainWindowViewModel(Config config, SystemRunner runner)
     {
-        var config = new Config();
-
-        _runner = new SystemRunner(config);
-
-        Graphs = [.. config.Graphs.Select(x => new ValueGraphViewModel(x.Name, x.ParameterId))];
+        _runner = runner;
+        Graphs = [.. config.Graphs.Select(x => new ValueGraphViewModel(x.Name, x.ParameterId, config.Parameters.Input[x.ParameterId].Multiplier))];
         _runner.Device.Read += OnRead;
     }
-
-    private SystemRunner _runner;
 
     /// <summary>
     /// Graphs that should be displayed

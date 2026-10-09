@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
+using TemperatureCalibratorUtil.Configuration;
+using TemperatureCalibratorUtil.Modbus;
 
-namespace TemperatureCalibratorUtil;
+namespace TemperatureCalibratorUtil.Model;
 
 public class SystemRunner
 {

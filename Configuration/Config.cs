@@ -1,4 +1,4 @@
-﻿namespace TemperatureCalibratorUtil;
+﻿namespace TemperatureCalibratorUtil.Configuration;
 
 public class Config
 {

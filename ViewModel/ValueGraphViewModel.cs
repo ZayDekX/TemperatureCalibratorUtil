@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiveChartsCore.Defaults;
 
-namespace TemperatureCalibratorUtil;
+namespace TemperatureCalibratorUtil.ViewModel;
 
 public partial class ValueGraphViewModel : ObservableObject
 {
@@ -23,10 +23,11 @@ public partial class ValueGraphViewModel : ObservableObject
         Separators = new([0, 0, 0, 0, 0, 0]);
     }
 
-    public ValueGraphViewModel(string name, int parameterId) : this()
+    public ValueGraphViewModel(string name, int parameterId, double multiplier) : this()
     {
         Name = name;
         ParameterId = parameterId;
+        Multiplier = multiplier;
     }
 
     public ObservableCollection<double> Separators { get; set; }
@@ -39,11 +40,14 @@ public partial class ValueGraphViewModel : ObservableObject
 
     public object Sync { get; } = new object();
 
+    public double Multiplier { get; set; }
+
     public void AddPoint(DateTime time, double value)
     {
         // the best way to avoid unnecessary allocations would be just to move all points towards beginning and write first point to the end of list
-        // but since LiveCharts doesn't like it (basically ignores), there is a ton of updates of every single point
-        // it causes a bit less of GC pressure than adding new point and removing first one
+        // or custom collection with rolling beginning
+        // but since LiveCharts doesn't like movement of points (basically ignores), there is a ton of updates
+        // in any case current solution causes a bit less of GC pressure than adding new point and removing first one
 
         lock (Sync)
         {
@@ -58,7 +62,7 @@ public partial class ValueGraphViewModel : ObservableObject
 
             var lastPoint = Values[^1];
 
-            lastPoint.Value = value;
+            lastPoint.Value = value / Multiplier;
             lastPoint.DateTime = time;
 
             var separatorCount = Separators.Count;

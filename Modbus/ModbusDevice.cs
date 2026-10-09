@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
+using TemperatureCalibratorUtil.Configuration;
 
-namespace TemperatureCalibratorUtil;
+namespace TemperatureCalibratorUtil.Modbus;
 
 /// <summary>
 /// Represents remote modbus device

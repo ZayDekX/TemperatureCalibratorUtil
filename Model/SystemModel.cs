@@ -1,4 +1,6 @@
-﻿namespace TemperatureCalibratorUtil;
+﻿using TemperatureCalibratorUtil.Configuration;
+
+namespace TemperatureCalibratorUtil.Model;
 
 public class SystemModel
 {

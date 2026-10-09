@@ -1,4 +1,8 @@
 ﻿using System.Windows;
+using System.Windows.Navigation;
+using TemperatureCalibratorUtil.Configuration;
+using TemperatureCalibratorUtil.Model;
+using TemperatureCalibratorUtil.ViewModel;
 
 namespace TemperatureCalibratorUtil;
 
@@ -7,8 +11,20 @@ namespace TemperatureCalibratorUtil;
 /// </summary>
 public partial class App : Application
 {
-    public App()
+    private SystemRunner _runner;
+
+    protected override void OnStartup(StartupEventArgs e)
     {
-        InitializeComponent();
+        base.OnStartup(e);
+        var config = new Config();
+
+        _runner = new SystemRunner(config);
+
+        MainWindow = new MainWindow()
+        {
+            DataContext = new MainWindowViewModel(config, _runner)
+        };
+
+        MainWindow.Show();
     }
 }

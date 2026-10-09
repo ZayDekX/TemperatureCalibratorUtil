@@ -1,4 +1,6 @@
-﻿namespace TemperatureCalibratorUtil;
+﻿using TemperatureCalibratorUtil.Configuration;
+
+namespace TemperatureCalibratorUtil.Model;
 
 /// <summary>
 /// PID Controller implementation

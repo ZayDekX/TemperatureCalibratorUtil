@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using NModbus;
 
-namespace TemperatureCalibratorUtil;
+namespace TemperatureCalibratorUtil.Modbus;
 
 /// <summary>
 /// Simple wrapper around <see cref="IModbusMaster"/> for connection handling
