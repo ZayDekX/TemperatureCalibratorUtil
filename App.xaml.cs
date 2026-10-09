@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Text.Json;
+using System.Windows;
 using System.Windows.Navigation;
 using TemperatureCalibratorUtil.Configuration;
 using TemperatureCalibratorUtil.Model;
@@ -11,18 +13,29 @@ namespace TemperatureCalibratorUtil;
 /// </summary>
 public partial class App : Application
 {
-    private SystemRunner _runner;
+    private const string ConfigName = "config.json";
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        var config = new Config();
 
-        _runner = new SystemRunner(config);
+        Config config;
+
+        try
+        {
+            config = JsonSerializer.Deserialize<Config>(File.ReadAllText(ConfigName))!;
+        }
+        catch
+        {
+            config = new();
+            File.WriteAllText(ConfigName, JsonSerializer.Serialize(config));
+        }
+
+        var runner = new SystemRunner(config);
 
         MainWindow = new MainWindow()
         {
-            DataContext = new MainWindowViewModel(config, _runner)
+            DataContext = new MainWindowViewModel(config, runner)
         };
 
         MainWindow.Show();

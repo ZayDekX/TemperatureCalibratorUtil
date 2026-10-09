@@ -15,8 +15,6 @@ public class SystemModel
         _controller = new(_config.PidController);
         _parameters = parameters;
 
-        TargetTemperature = _config.TargetTemperature;
-
         // order and index parameters
         var rawIndex = parameters.Input
             .Select((x, i) => (id: i, config: x))
@@ -35,7 +33,7 @@ public class SystemModel
         }
     }
 
-    public double TargetTemperature { get; set; }
+    public double TargetTemperature => _config.TargetTemperature;
     public double TargetHeaterTemperature { get; set; }
 
     public void Update(ReadOnlySpan<ushort> inputs, double dt)

@@ -6,6 +6,8 @@ public class Config
     public List<GraphConfig> Graphs { get; set; } = [
         new() {Name = "T_system", ParameterId = 0},
         new() {Name = "T_heater", ParameterId = 2},
+        new() {Name = "T_env", ParameterId = 4},
+        new() {Name = "P", ParameterId = 6}
     ];
     public SystemConfig System { get; set; } = new();
     public DeviceParameterConfig Parameters { get; set; } = new();
