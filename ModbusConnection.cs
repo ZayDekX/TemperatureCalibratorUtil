@@ -64,9 +64,4 @@ public class ModbusConnection : IDisposable
     {
         Disconnect();
     }
-
-    internal void Connect(string host, object port)
-    {
-        throw new NotImplementedException();
-    }
 }

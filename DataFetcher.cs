@@ -12,32 +12,30 @@ public class DataFetcher(DataFetcherConfig config) : BackgroundService
 
     private ushort[] _values = new ushort[8];
 
+    private ModbusConnection _connection = new();
+
     public ReadOnlySpan<ushort> Values => _values;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var factory = new ModbusFactory();
+        _connection.Connect(_config.Host, _config.Port);
 
-        using var device = new ModbusConnection();
-
-        device.Connect(_config.Host, _config.Port);
-
-        if(!device.Connected)
+        if(!_connection.Connected)
         {
             return;
         }
 
-        device.Master.WriteMultipleRegisters(5, 0, [500, 1]);
+        Write([500, 1]);
 
         var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_config.Period));
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                device.Master.ReadInputRegisters(1, 0, 2).CopyTo(_values.AsSpan()[0..2]);
-                device.Master.ReadInputRegisters(2, 0, 2).CopyTo(_values.AsSpan()[2..4]);
-                device.Master.ReadInputRegisters(3, 0, 2).CopyTo(_values.AsSpan()[4..6]);
-                device.Master.ReadInputRegisters(4, 0, 2).CopyTo(_values.AsSpan()[6..8]);
+                _connection.Master.ReadInputRegisters(1, 0, 2).CopyTo(_values.AsSpan()[0..2]);
+                _connection.Master.ReadInputRegisters(2, 0, 2).CopyTo(_values.AsSpan()[2..4]);
+                _connection.Master.ReadInputRegisters(3, 0, 2).CopyTo(_values.AsSpan()[4..6]);
+                _connection.Master.ReadInputRegisters(4, 0, 2).CopyTo(_values.AsSpan()[6..8]);
 
                 OnRead();
             }
@@ -53,5 +51,15 @@ public class DataFetcher(DataFetcherConfig config) : BackgroundService
         Read?.Invoke();
     }
 
+    public void Write(ushort[] values)
+    {
+        _connection.Master?.WriteMultipleRegisters(5, 0, values);
+    }
+
     public event Action? Read;
+
+    public override void Dispose()
+    {
+        
+    }
 }
