@@ -33,6 +33,9 @@ public class ModbusDevice : BackgroundService
 
     public ReadOnlySpan<ushort> Inputs => _values;
 
+    public event Action? Connected;
+    public event Action? Disconnected;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _connection.Connect(_config.Host, _config.Port);
@@ -41,6 +44,8 @@ public class ModbusDevice : BackgroundService
         {
             return;
         }
+
+        Connected?.Invoke();
 
         var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_config.Period));
         try
@@ -63,7 +68,11 @@ public class ModbusDevice : BackgroundService
         }
         catch (Exception ex)
         {
-
+            if(_connection.Connected)
+            {
+                return;
+            }
+            Disconnected?.Invoke();
         }
     }
 

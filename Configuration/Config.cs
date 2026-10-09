@@ -4,29 +4,11 @@ public class Config
 {
     public DeviceConfig Device { get; set; } = new();
     public List<GraphConfig> Graphs { get; set; } = [
-        new() {Name = "T_system", ParameterId = 0},
-        new() {Name = "T_heater", ParameterId = 2},
-        new() {Name = "T_env", ParameterId = 4},
-        new() {Name = "P", ParameterId = 6}
+        new() {Name = "T_system", ParameterId = 0, ErrorId = 1},
+        new() {Name = "T_heater", ParameterId = 2, ErrorId = 3},
+        new() {Name = "T_env", ParameterId = 4, ErrorId = 5},
+        new() {Name = "P", ParameterId = 6, ErrorId = 7}
     ];
     public SystemConfig System { get; set; } = new();
     public DeviceParameterConfig Parameters { get; set; } = new();
-}
-
-public class SystemConfig
-{
-    public PIDControllerConfig PidController { get; set; } = new();
-    public double TargetTemperature { get; set; } = 50;
-
-    // inputs
-
-    public int SystemTemperatureParameterId { get; set; } = 0;
-    public int HeaterTemperatureParameterId { get; set; } = 2;
-    public int EnvironmentTemperatureParameterId { get; set; } = 4;
-    public int PressureParameterId { get; set; } = 6;
-
-    // outputs
-
-    public int TargetHeaterTemperatureParameterId { get; set; } = 0;
-    public int HeaterStateParameterId { get; set; } = 1;
 }

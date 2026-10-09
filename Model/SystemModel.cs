@@ -36,11 +36,52 @@ public class SystemModel
     public double TargetTemperature => _config.TargetTemperature;
     public double TargetHeaterTemperature { get; set; }
 
+    public bool Stable
+    {
+        get; 
+        set
+        {
+            if(field == value)
+            {
+                return;
+            }
+
+            field = value;
+            if(value)
+            {
+                Stabilized?.Invoke();
+            }
+            else
+            {
+                Destabilized?.Invoke();
+            }
+        }
+    }
+
+    public event Action? Stabilized;
+    public event Action? Destabilized;
+
+    private uint _stableFrames;
+
     public void Update(ReadOnlySpan<ushort> inputs, double dt)
     {
         var tSystem = GetValue(inputs, _config.SystemTemperatureParameterId);
 
         TargetHeaterTemperature = _controller.Compute(TargetTemperature, tSystem, dt);
+
+        if (Math.Abs(TargetTemperature - tSystem) <= _config.StabilityTolerance)
+        {
+            unchecked { _stableFrames++; }
+        }
+        else
+        {
+            Stable = false;
+        }
+
+        if (_stableFrames >= _config.MinStabilityFrameCount)
+        {
+            Stable = true;
+        }
     }
 
     private double GetValue(ReadOnlySpan<ushort> inputs, int id)

@@ -9,39 +9,46 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800"
              d:DataContext="{d:DesignInstance Type=vm:ValueGraphViewModel}">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Label Content="{Binding Name}"/>
-        <lvc:CartesianChart
+    <Border BorderThickness="1" BorderBrush="{Binding StateBrush}">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Content="{Binding Name}"/>
+            <lvc:CartesianChart
             MinHeight="150"
             Grid.Row="1"
-            VerticalAlignment="Stretch"
             AnimationsSpeed="0"
-            SyncContext="{Binding Sync}">
-            <lvc:CartesianChart.Series>
-                <lvc:SeriesCollection>
-                    <lvc:XamlLineSeries
+            SyncContext="{Binding Sync}"
+            >
+                <lvc:CartesianChart.Series>
+                    <lvc:SeriesCollection>
+                        <lvc:XamlLineSeries
                         Values="{Binding Values}"
                         Fill="{x:Null}"
                         GeometryFill="{x:Null}"
                         GeometryStroke="{x:Null}"
                         Stroke="{lvc:SolidColorPaint Color='98b8da', StrokeWidth='1'}"
                     />
-                </lvc:SeriesCollection>
-            </lvc:CartesianChart.Series>
-            <lvc:CartesianChart.XAxes>
-                <lvc:AxesCollection>
-                    <lvc:XamlDateTimeAxis
+                    </lvc:SeriesCollection>
+                </lvc:CartesianChart.Series>
+                <lvc:CartesianChart.XAxes>
+                    <lvc:AxesCollection>
+                        <lvc:XamlDateTimeAxis
                         Interval="0:0:1"
                         DateFormatter="{Binding LabelsFormatter}"
                         AnimationsSpeed="0"
                         SeparatorsPaint="{lvc:SolidColorPaint Color='64B4B4B4'}"
                         CustomSeparators="{Binding Separators}"/>
-                </lvc:AxesCollection>
-            </lvc:CartesianChart.XAxes>
-        </lvc:CartesianChart>
-    </Grid>
+                    </lvc:AxesCollection>
+                </lvc:CartesianChart.XAxes>
+            </lvc:CartesianChart>
+            <TextBlock Grid.Row="2" HorizontalAlignment="Right">
+            Current value: <TextBlock Text="{Binding CurrentValue}"/>
+        </TextBlock>
+        </Grid>
+    </Border>
 </UserControl>

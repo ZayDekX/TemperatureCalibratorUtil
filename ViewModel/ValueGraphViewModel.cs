@@ -1,13 +1,26 @@
 ﻿using System.Collections.ObjectModel;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiveChartsCore.Defaults;
 
 namespace TemperatureCalibratorUtil.ViewModel;
 
+public static class Colors
+{
+    public static readonly SolidColorBrush ErrorBrush = new(Color.FromRgb(172, 51, 46));
+    public static readonly SolidColorBrush OkBrush = new(Color.FromRgb(78, 201, 176));
+}
+
 public partial class ValueGraphViewModel : ObservableObject
 {
     public string Name { get; set; }
     public int ParameterId { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StateBrush))]
+    public partial bool HasError { get; set; }
+
+    public Brush StateBrush => HasError ? Colors.ErrorBrush : Colors.OkBrush;
 
     public ValueGraphViewModel()
     {
@@ -23,11 +36,12 @@ public partial class ValueGraphViewModel : ObservableObject
         Separators = new([0, 0, 0, 0, 0, 0]);
     }
 
-    public ValueGraphViewModel(string name, int parameterId, double multiplier) : this()
+    public ValueGraphViewModel(string name, int parameterId, int errorId, double multiplier) : this()
     {
         Name = name;
         ParameterId = parameterId;
         Multiplier = multiplier;
+        ErrorId = errorId;
     }
 
     public ObservableCollection<double> Separators { get; set; }
@@ -41,6 +55,8 @@ public partial class ValueGraphViewModel : ObservableObject
     public object Sync { get; } = new object();
 
     public double Multiplier { get; set; }
+
+    public int ErrorId { get; set; }
 
     public void AddPoint(DateTime time, double value)
     {
@@ -71,15 +87,12 @@ public partial class ValueGraphViewModel : ObservableObject
             {
                 Separators[i] = time.AddSeconds(-5 * (separatorCount - i)).Ticks;
             }
+            OnPropertyChanged(nameof(CurrentValue));
         }
     }
 
     private static string Formatter(DateTime date)
     {
-        var delta = (DateTime.Now - date).TotalSeconds;
-
-        return delta < 1
-            ? "now"
-            : $"{delta:N0}s ago";
+        return $"{date:HH:mm:ss}";
     }
 }

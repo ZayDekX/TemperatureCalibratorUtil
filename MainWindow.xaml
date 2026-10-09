@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:TemperatureCalibratorUtil"
         xmlns:vm="clr-namespace:TemperatureCalibratorUtil.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="MainWindow" Width="800"
+        Height="Auto"
         d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}">
 
     <Grid>
@@ -22,7 +23,7 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Grid Grid.Column="1" MinWidth="100">
+        <Grid Grid.Column="1" MinWidth="150">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -37,6 +38,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
@@ -48,9 +50,11 @@
                 <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Config.Device.Port}" IsEnabled="{Binding IsRunning}"/>
                 <Label     Grid.Row="2" Grid.Column="0" Content="Period"/>
                 <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Config.Device.Period}"/>
+                <TextBlock Margin="0,8" Grid.Row="3">Status: <TextBlock Text="{Binding ConnectionStatus}" Foreground="{Binding ConnectionStatusColor}" /></TextBlock>
             </Grid>
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
+                    <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
@@ -61,6 +65,7 @@
                 <Label Grid.Row="0" Grid.Column="0" Content="T_target"/>
                 <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Config.System.TargetTemperature, StringFormat=F2}"/>
                 <Slider Grid.Row="1" Grid.ColumnSpan="2" Minimum="0" Maximum="100" Value="{Binding Config.System.TargetTemperature}"/>
+                <TextBlock Grid.Row="2" Grid.RowSpan="2" Text="{Binding Stability}" Foreground="{Binding StabilityColor}" />
             </Grid>
             <Button Grid.Row="3" Command="{Binding StartButtonCommand}" Content="{Binding StartButtonText}"/>
         </Grid>

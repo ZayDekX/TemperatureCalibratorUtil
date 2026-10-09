@@ -21,8 +21,8 @@ public class SystemRunner
     }
 
     private long _lastStamp;
-    private DeviceParameterConfig _parameterConfig;
-    private SystemConfig _systemConfig;
+    private readonly DeviceParameterConfig _parameterConfig;
+    private readonly SystemConfig _systemConfig;
 
     private void OnRead()
     {
@@ -47,6 +47,7 @@ public class SystemRunner
     public void Stop()
     {
         var stopSource = new CancellationTokenSource();
-        Device.StopAsync(stopSource.Token);
+        Device.Write([0, 0]);
+        Device.StopAsync(stopSource.Token).Wait();
     }
 }

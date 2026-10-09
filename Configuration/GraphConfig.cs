@@ -2,8 +2,9 @@
 
 public class GraphConfig
 {
-    public int ParameterId { get; set; }
     public string Name { get; set; }
+    public int ParameterId { get; set; }
+    public int ErrorId { get; set; }
 }
 
 public class ParameterConfig

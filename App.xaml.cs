@@ -14,6 +14,7 @@ namespace TemperatureCalibratorUtil;
 public partial class App : Application
 {
     private const string ConfigName = "config.json";
+    private SystemRunner _runner;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -31,13 +32,19 @@ public partial class App : Application
             File.WriteAllText(ConfigName, JsonSerializer.Serialize(config));
         }
 
-        var runner = new SystemRunner(config);
+        _runner = new SystemRunner(config);
 
         MainWindow = new MainWindow()
         {
-            DataContext = new MainWindowViewModel(config, runner)
+            DataContext = new MainWindowViewModel(config, _runner)
         };
 
         MainWindow.Show();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _runner.Stop();
+        base.OnExit(e);
     }
 }
