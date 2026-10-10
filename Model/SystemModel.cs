@@ -1,4 +1,5 @@
 ﻿using TemperatureCalibratorUtil.Configuration;
+using TemperatureCalibratorUtil.Logging;
 
 namespace TemperatureCalibratorUtil.Model;
 
@@ -9,13 +10,15 @@ public class SystemModel
     private readonly PIDController _controller;
     private readonly DeviceParameterConfig _parameters;
     private readonly ValueProcessor _processor;
+    private readonly CsvLogger _logger;
 
-    public SystemModel(SystemConfig config, DeviceParameterConfig parameters, ValueProcessor processor)
+    public SystemModel(ValueProcessor processor, CsvLogger logger, SystemConfig config, DeviceParameterConfig parameters)
     {
         _config = config;
         _controller = new(_config.PidController);
         _parameters = parameters;
         _processor = processor;
+        _logger = logger;
     }
 
     /// <summary>
@@ -63,7 +66,21 @@ public class SystemModel
     {
         ValidateInputs(inputs);
 
+        LogValues(inputs);
+
         UpdateTargetHeaterTemperature(inputs, dt);
+    }
+
+    private void LogValues(ReadOnlySpan<ushort> inputs)
+    {
+        var state = new SystemState(
+            systemTemperature: _processor.ReadInputValue(inputs, _config.SystemTemperatureParameterId).value,
+            heaterTemperature: _processor.ReadInputValue(inputs, _config.HeaterTemperatureParameterId).value,
+            pressure: _processor.ReadInputValue(inputs, _config.PressureParameterId).value,
+            ambientTemperature: _processor.ReadInputValue(inputs, _config.EnvironmentTemperatureParameterId).value
+        );
+
+        _logger.Write(DateTime.UtcNow, state);
     }
 
     private void ValidateInputs(ReadOnlySpan<ushort> inputs)

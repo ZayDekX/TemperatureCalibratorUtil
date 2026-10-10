@@ -26,4 +26,9 @@ public class Config
     /// Mosbus parameters
     /// </summary>
     public DeviceParameterConfig Parameters { get; set; } = new();
+
+    /// <summary>
+    /// CSV logger parameters
+    /// </summary>
+    public CsvLoggerConfig Logging { get; set; } = new();
 }

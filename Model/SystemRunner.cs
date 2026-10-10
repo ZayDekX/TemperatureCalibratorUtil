@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Hosting;
 using TemperatureCalibratorUtil.Configuration;
+using TemperatureCalibratorUtil.Logging;
 using TemperatureCalibratorUtil.Modbus;
 
 namespace TemperatureCalibratorUtil.Model;
@@ -11,9 +12,11 @@ public class SystemRunner : BackgroundService
     {
         UpdatePeriod = config.System.UpdatePeriod;
 
+        var logger = new CsvLogger(config.Logging);
+
         Processor = new(config.Parameters);
         Device = new(config.Device, config.Parameters);
-        System = new(config.System, config.Parameters, Processor);
+        System = new(Processor, logger, config.System, config.Parameters);
 
         _targetHeaterTempParameterId = config.System.TargetHeaterTemperatureParameterId;
         _heaterStateParameterId = config.System.HeaterStateParameterId;
