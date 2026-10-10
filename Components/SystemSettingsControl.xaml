@@ -24,7 +24,7 @@
         </Grid.ColumnDefinitions>
         <Label Grid.Row="0" Grid.Column="0" Content="T_target"/>
         <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding TargetTemperature, StringFormat=F1}"/>
-        <Slider Grid.Row="1" Grid.ColumnSpan="2" Minimum="0" Maximum="100" Value="{Binding TargetTemperature}"/>
+        <Slider Grid.Row="1" Grid.ColumnSpan="2" Minimum="{Binding MinAllowedTarget}" Maximum="{Binding MaxAllowedTarget}" Value="{Binding TargetTemperature}"/>
         <TextBlock Grid.Row="2" Grid.RowSpan="2" Text="{Binding Stability}">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">

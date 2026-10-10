@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TemperatureCalibratorUtil.Configuration;
 using TemperatureCalibratorUtil.Model;
@@ -14,25 +15,21 @@ public partial class ConnectionControlViewModel : ObservableObject
     {
         _runner = runner;
         _config = config;
-        IsDeviceConnected = _runner.Device.IsConnected;
+        IsConnected = _runner.Device.IsConnected;
         _runner.Device.Connected += OnConnected;
         _runner.Device.Disconnected += OnDisconnected;
-        _runner.Started += OnStarted;
-        _runner.Stopped += OnStopped;
     }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ConnectionStatus))]
+    [NotifyPropertyChangedFor(nameof(IsNotConnected))]
     [NotifyPropertyChangedFor(nameof(ToggleConnectionCommand))]
     [NotifyPropertyChangedFor(nameof(ToggleConnectionText))]
-    public partial bool IsDeviceConnected { get; set; }
+    public partial bool IsConnected { get; set; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotRunning))]
-    public partial bool IsRunning { get; private set; }
-    public bool IsNotRunning => !IsRunning; // better to be implemented via converters
+    public bool IsNotConnected => !IsConnected; // better to be implemented via converters
 
-    public string ConnectionStatus => IsDeviceConnected ? "Connected" : "Disconnected";
+    public string ConnectionStatus => IsConnected ? "Connected" : "Disconnected";
 
     public string Host
     {
@@ -64,13 +61,22 @@ public partial class ConnectionControlViewModel : ObservableObject
         }
     }
 
-    public IRelayCommand ToggleConnectionCommand => IsDeviceConnected ? DisconnectCommand : ConnectCommand;
-    public string ToggleConnectionText => IsDeviceConnected ? "Disconnect" : "Connect";
+    public IRelayCommand ToggleConnectionCommand => IsConnected ? DisconnectCommand : ConnectCommand;
+    public string ToggleConnectionText => IsConnected ? "Disconnect" : "Connect";
 
     [RelayCommand]
-    public void Connect()
+    public Task Connect()
     {
-        _runner.Device.Connect();
+        try
+        {
+            _runner.Device.Connect();
+        }
+        catch
+        {
+            MessageBox.Show("Failed to connect to system");
+        }
+
+        return Task.CompletedTask;
     }
 
     [RelayCommand]
@@ -81,21 +87,11 @@ public partial class ConnectionControlViewModel : ObservableObject
 
     private void OnConnected()
     {
-        IsDeviceConnected = true;
+        IsConnected = true;
     }
 
     private void OnDisconnected()
     {
-        IsDeviceConnected = false;
-    }
-
-    private void OnStarted()
-    {
-        IsRunning = true;
-    }
-
-    private void OnStopped()
-    {
-        IsRunning = false;
+        IsConnected = false;
     }
 }

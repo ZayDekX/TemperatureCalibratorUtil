@@ -8,12 +8,14 @@ public class SystemModel
     private readonly SystemConfig _config;
     private readonly PIDController _controller;
     private readonly DeviceParameterConfig _parameters;
+    private readonly ValueProcessor _processor;
 
-    public SystemModel(SystemConfig config, DeviceParameterConfig parameters)
+    public SystemModel(SystemConfig config, DeviceParameterConfig parameters, ValueProcessor processor)
     {
         _config = config;
         _controller = new(_config.PidController);
         _parameters = parameters;
+        _processor = processor;
     }
 
     /// <summary>
@@ -53,12 +55,36 @@ public class SystemModel
 
     public event Action? Stabilized;
     public event Action? Destabilized;
+    public event Action<int>? Alert;
 
     private uint _stableFrames;
 
     public void Update(ReadOnlySpan<ushort> inputs, double dt)
     {
-        var tSystem = GetValue(inputs, _config.SystemTemperatureParameterId);
+        ValidateInputs(inputs);
+
+        UpdateTargetHeaterTemperature(inputs, dt);
+    }
+
+    private void ValidateInputs(ReadOnlySpan<ushort> inputs)
+    {
+        var id = 0;
+        foreach (var parameter in _parameters.Input)
+        {
+            var (value, alert) = _processor.ReadInputValue(inputs, id);
+
+            if (alert)
+            {
+                Alert?.Invoke(id);
+            }
+
+            id++;
+        }
+    }
+
+    private void UpdateTargetHeaterTemperature(ReadOnlySpan<ushort> inputs, double dt)
+    {
+        var (tSystem, _) = _processor.ReadInputValue(inputs, _config.SystemTemperatureParameterId);
 
         TargetHeaterTemperature = _controller.Compute(TargetTemperature, tSystem, dt);
 
@@ -76,10 +102,5 @@ public class SystemModel
         {
             Stable = true;
         }
-    }
-
-    private double GetValue(ReadOnlySpan<ushort> inputs, int id)
-    {
-        return inputs[id] / _parameters.Input[id].Multiplier;
     }
 }

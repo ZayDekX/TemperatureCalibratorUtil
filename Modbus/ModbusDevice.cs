@@ -10,22 +10,24 @@ public sealed class ModbusDevice : IDisposable
     public ModbusDevice(DeviceConfig connectionConfig, DeviceParameterConfig parameters)
     {
         _deviceConfig = connectionConfig;
+        _parameters = parameters;
 
-        _inputInfo = [.. parameters.Input.Select(x => ((byte)x.Device, (ushort)x.Address))];
-        _inputBuffer = new ushort[_inputInfo.Length];
+        _inputBuffer = new ushort[_parameters.Input.Count];
+        _outputBuffer = new ushort[_parameters.Output.Count];
     }
 
     private readonly DeviceConfig _deviceConfig;
-    private readonly (byte deviceId, ushort address)[] _inputInfo;
+    private readonly DeviceParameterConfig _parameters;
 
-    private readonly ushort[] _inputBuffer = new ushort[8];
-
+    private readonly ushort[] _inputBuffer;
+    private readonly ushort[] _outputBuffer;
     private readonly ModbusConnection _connection = new();
 
     /// <summary>
     /// Input buffer with read values
     /// </summary>
     public ReadOnlySpan<ushort> InputBuffer => _inputBuffer;
+    public Span<ushort> OutputBuffer => _outputBuffer;
 
     /// <summary>
     /// Determines whether connection to Modbus device exists
@@ -49,13 +51,13 @@ public sealed class ModbusDevice : IDisposable
 
     public void Connect()
     {
-        if(IsConnected)
+        if (IsConnected)
         {
             return;
         }
 
         _connection.Connect(_deviceConfig.Host, _deviceConfig.Port);
-        if(IsConnected)
+        if (IsConnected)
         {
             Connected?.Invoke();
         }
@@ -63,13 +65,13 @@ public sealed class ModbusDevice : IDisposable
 
     public void Disconnect()
     {
-        if(!IsConnected)
+        if (!IsConnected)
         {
             return;
         }
 
         _connection.Disconnect();
-        if(!IsConnected)
+        if (!IsConnected)
         {
             Disconnected?.Invoke();
         }
@@ -79,6 +81,7 @@ public sealed class ModbusDevice : IDisposable
     {
         if (!IsConnected)
         {
+            Disconnected?.Invoke();
             return;
         }
 
@@ -88,19 +91,24 @@ public sealed class ModbusDevice : IDisposable
 
             // straightforward implementation
             // main downside is that creates a lot of requests to remote device, which is very critical on RTU with many devices on one bus
-            for (var i = 0; i < _inputInfo.Length; i++)
+            var pos = 0;
+            foreach (var parameter in _parameters.Input)
             {
-                var (deviceId, address) = _inputInfo[i];
-                _connection.Master!.ReadInputRegisters(deviceId, address, 1).CopyTo(valueSpan[i..]);
+                _connection.Master!.ReadInputRegisters(parameter.Device, parameter.Address, 1).CopyTo(valueSpan[pos..]);
+                pos++;
             }
         }
         catch (Exception ex)
         {
+            if (!IsConnected)
+            {
+                Disconnected?.Invoke();
+            }
             OnError(ex);
         }
     }
 
-    public void Write(ParameterConfig parameter, ushort value)
+    public void Write()
     {
         if (!IsConnected)
         {
@@ -109,10 +117,21 @@ public sealed class ModbusDevice : IDisposable
 
         try
         {
-            _connection.Master!.WriteSingleRegister(parameter.Device, parameter.Address, value);
+            // straightforward implementation again
+            // downsides are the same as with reader implementation
+            var pos = 0;
+            foreach (var parameter in _parameters.Output)
+            {
+                _connection.Master!.WriteSingleRegister(parameter.Device, parameter.Address, _outputBuffer[pos]);
+                pos++;
+            }
         }
         catch (Exception ex)
         {
+            if (!IsConnected)
+            {
+                Disconnected?.Invoke();
+            }
             OnError(ex);
         }
     }

@@ -9,14 +9,18 @@ public partial class SystemControlViewModel : ObservableObject
 {
     private readonly SystemRunner _runner;
     private readonly SystemConfig _config;
+    private readonly DeviceParameterConfig _parameters;
 
-    public SystemControlViewModel(SystemRunner runner, SystemConfig config)
+    public SystemControlViewModel(SystemRunner runner, SystemConfig config, DeviceParameterConfig parameters)
     {
         _runner = runner;
         _config = config;
+        _parameters = parameters;
         IsStable = _runner.System.Stable;
         _runner.System.Stabilized += OnStabilized;
         _runner.System.Destabilized += OnDestabilized;
+        _runner.Started += OnStarted;
+        _runner.Stopped += OnStopped;
     }
 
     public string Stability => IsStable ? "Stable" : "Not stable";
@@ -69,17 +73,28 @@ public partial class SystemControlViewModel : ObservableObject
         }
     }
 
+    public double MinAllowedTarget => _parameters.Input[_config.SystemTemperatureParameterId].Min;
+    public double MaxAllowedTarget => _parameters.Input[_config.SystemTemperatureParameterId].Max;
+
     [RelayCommand]
     private async Task Start(CancellationToken cancellationToken)
     {
         await _runner.StartAsync(cancellationToken);
-        IsRunning = true;
     }
 
     [RelayCommand]
     public async Task Stop(CancellationToken cancellationToken)
     {
         await _runner.StopAsync(cancellationToken);
+    }
+
+    private void OnStarted()
+    {
+        IsRunning = true;
+    }
+
+    private void OnStopped()
+    {
         IsRunning = false;
     }
 

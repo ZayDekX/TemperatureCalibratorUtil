@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
 using TemperatureCalibratorUtil.Configuration;
 using TemperatureCalibratorUtil.Model;
 
@@ -11,12 +12,18 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(Config config, SystemRunner runner)
     {
         _runner = runner;
-        Graphs = [.. config.Charts.Select(x => new ChartViewModel(x, config.Parameters.Input[x.ParameterId].Multiplier))];
+        Charts = [.. config.Charts.Select(x => new ChartViewModel(x, config.Parameters.Input[x.ParameterId]))];
 
         ConnectionControl = new(_runner, config.Device);
-        SystemControl = new(_runner, config.System);
+        SystemControl = new(_runner, config.System, config.Parameters);
 
         _runner.Updated += OnUpdate;
+        _runner.Device.Disconnected += OnDisconnected;
+    }
+
+    private void OnDisconnected()
+    {
+        MessageBox.Show("Remote device has been disconnected");
     }
 
     [ObservableProperty]
@@ -28,18 +35,18 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>
     /// Charts that should be displayed
     /// </summary>
-    public IEnumerable<ChartViewModel> Graphs { get; }
+    public IEnumerable<ChartViewModel> Charts { get; }
 
     private void OnUpdate()
     {
         var time = DateTime.Now;
 
-        foreach (var graph in Graphs)
+        foreach (var chart in Charts)
         {
-            graph.AddPoint(time, _runner.Device.InputBuffer[graph.ParameterId]);
-            if (graph.ErrorId >= 0)
+            chart.AddPoint(time, _runner.Device.InputBuffer[chart.ParameterId]);
+            if (chart.ErrorId >= 0)
             {
-                graph.HasError = _runner.Device.InputBuffer[graph.ErrorId] is not 0;
+                chart.HasError = _runner.Device.InputBuffer[chart.ErrorId] is not 0;
             }
         }
     }

@@ -7,18 +7,21 @@ namespace TemperatureCalibratorUtil.ViewModel;
 
 public partial class ChartViewModel : ObservableObject
 {
-    private ChartConfig _config;
+    private readonly ChartConfig _config;
+    private readonly ParameterConfig _parameterConfig;
 
     [ObservableProperty]
     public partial bool HasError { get; set; }
 
+    public bool HasAlert => AlertLevel is not null && CurrentValue >= AlertLevel;
+
     public string Name => _config.Name;
     public int ParameterId => _config.ParameterId;
 
-    public ChartViewModel(ChartConfig config, double multiplier)
+    public ChartViewModel(ChartConfig config, ParameterConfig parameter)
     {
         _config = config;
-        Multiplier = multiplier;
+        _parameterConfig = parameter;
 
         Separators = new(new double[_config.SeparatorCount]);
 
@@ -41,7 +44,13 @@ public partial class ChartViewModel : ObservableObject
 
     public object Sync { get; } = new();
 
-    public double Multiplier { get; }
+    public double Multiplier => _parameterConfig.Multiplier;
+
+    public double Min => Math.Min(_parameterConfig.Min, CurrentValue - 10);
+
+    public double Max => Math.Max(_parameterConfig.Max, CurrentValue + 10);
+
+    public double? AlertLevel => _parameterConfig.AlertLevel;
 
     public int ErrorId => _config.ErrorId;
 
@@ -79,6 +88,9 @@ public partial class ChartViewModel : ObservableObject
                 Separators[i] = time.AddSeconds(-step * (separatorCount - i)).Ticks;
             }
             OnPropertyChanged(nameof(CurrentValue));
+            OnPropertyChanged(nameof(HasAlert));
+            OnPropertyChanged(nameof(Min));
+            OnPropertyChanged(nameof(Max));
         }
     }
 

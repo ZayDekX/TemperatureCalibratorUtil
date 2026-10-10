@@ -11,15 +11,23 @@ public class SystemRunner : BackgroundService
     {
         UpdatePeriod = config.System.UpdatePeriod;
 
+        Processor = new(config.Parameters);
         Device = new(config.Device, config.Parameters);
-        System = new(config.System, config.Parameters);
+        System = new(config.System, config.Parameters, Processor);
 
-        _targetHeaterTempParameter = config.Parameters.Output[config.System.TargetHeaterTemperatureParameterId];
-        _heaterStateParameter = config.Parameters.Output[config.System.HeaterStateParameterId];
+        _targetHeaterTempParameterId = config.System.TargetHeaterTemperatureParameterId;
+        _heaterStateParameterId = config.System.HeaterStateParameterId;
+
+        Device.Disconnected += OnDisconnected;
     }
 
-    private readonly ParameterConfig _targetHeaterTempParameter;
-    private readonly ParameterConfig _heaterStateParameter;
+    private void OnDisconnected()
+    {
+        StopAsync(CancellationToken.None);
+    }
+
+    private readonly int _targetHeaterTempParameterId;
+    private readonly int _heaterStateParameterId;
 
     private long _lastStamp;
     private TimeSpan _updatePeriod;
@@ -42,6 +50,7 @@ public class SystemRunner : BackgroundService
     /// Remote system
     /// </summary>
     public ModbusDevice Device { get; set; }
+    public ValueProcessor Processor { get; }
 
     public event Action? Started;
     public event Action? Stopped;
@@ -65,7 +74,7 @@ public class SystemRunner : BackgroundService
     {
         using var timer = new PeriodicTimer(_updatePeriod);
         _lastStamp = Stopwatch.GetTimestamp();
-        
+
         while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
         {
             Device.Read();
@@ -76,7 +85,10 @@ public class SystemRunner : BackgroundService
             System.Update(Device.InputBuffer, dt);
             _lastStamp = stamp;
 
-            Device.Write(_targetHeaterTempParameter, (ushort)(System.TargetHeaterTemperature * _targetHeaterTempParameter.Multiplier));
+            Span<ushort> output = [0];
+
+            Processor.WriteOutputValue(Device.OutputBuffer, _targetHeaterTempParameterId, System.TargetHeaterTemperature);
+            Device.Write();
 
             timer.Period = _updatePeriod;
 
@@ -86,19 +98,17 @@ public class SystemRunner : BackgroundService
 
     public void EnableHeater()
     {
-        Device.Write(_heaterStateParameter, 1);
+        Processor.WriteOutputValue(Device.OutputBuffer, _targetHeaterTempParameterId, System.TargetHeaterTemperature);
+        Processor.WriteOutputValue(Device.OutputBuffer, _heaterStateParameterId, 1);
+
+        Device.Write();
     }
 
     public void DisableHeater()
     {
-        Device.Write(_heaterStateParameter, 0);
-    }
-}
+        Processor.WriteOutputValue(Device.OutputBuffer, _targetHeaterTempParameterId, System.TargetHeaterTemperature);
+        Processor.WriteOutputValue(Device.OutputBuffer, _heaterStateParameterId, 0);
 
-public class ValueProcessor
-{
-    public ValueProcessor(DeviceParameterConfig parameters)
-    {
-        
+        Device.Write();
     }
 }

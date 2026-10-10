@@ -16,7 +16,7 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <ItemsControl Grid.Column="0" ItemsSource="{Binding Graphs}" Height="Auto">
+        <ItemsControl Grid.Column="0" ItemsSource="{Binding Charts}" Height="Auto">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <local:Chart DataContext="{Binding}"/>

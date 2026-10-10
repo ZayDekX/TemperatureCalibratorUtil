@@ -17,6 +17,9 @@
                     <DataTrigger Binding="{Binding HasError}" Value="True">
                         <Setter Property="BorderBrush" Value="{x:Static local:AppColors.ErrorBrush}"/>
                     </DataTrigger>
+                    <DataTrigger Binding="{Binding HasAlert}" Value="True">
+                        <Setter Property="BorderBrush" Value="Red"/>
+                    </DataTrigger>
                 </Style.Triggers>
             </Style>
         </Border.Style>
@@ -28,22 +31,28 @@
             </Grid.RowDefinitions>
             <Label Content="{Binding Name}"/>
             <lvc:CartesianChart
-            MinHeight="150"
-            Grid.Row="1"
-            AnimationsSpeed="0"
-            SyncContext="{Binding Sync}"
+                MinHeight="150"
+                Grid.Row="1"
+                AnimationsSpeed="0"
+                SyncContext="{Binding Sync}"
             >
                 <lvc:CartesianChart.Series>
                     <lvc:SeriesCollection>
                         <lvc:XamlLineSeries
-                        Values="{Binding Values}"
-                        Fill="{x:Null}"
-                        GeometryFill="{x:Null}"
-                        GeometryStroke="{x:Null}"
-                        Stroke="{lvc:SolidColorPaint Color='98b8da', StrokeWidth='1'}"
-                    />
+                            Values="{Binding Values}"
+                            Fill="{x:Null}"
+                            GeometryFill="{x:Null}"
+                            GeometryStroke="{x:Null}"
+                            Stroke="{lvc:SolidColorPaint Color='98b8da', StrokeWidth='1'}"
+                        />
                     </lvc:SeriesCollection>
                 </lvc:CartesianChart.Series>
+                <lvc:CartesianChart.YAxes>
+                    <lvc:AxesCollection>
+                        <lvc:XamlAxis MinLimit="{Binding Min}" MaxLimit="{Binding Max}"/>
+                    </lvc:AxesCollection>
+                </lvc:CartesianChart.YAxes>
+
                 <lvc:CartesianChart.XAxes>
                     <lvc:AxesCollection>
                         <lvc:XamlDateTimeAxis
