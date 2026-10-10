@@ -12,6 +12,21 @@ public class SystemConfig
     /// </summary>
     public double TargetTemperature { get; set; } = 50;
 
+    /// <summary>
+    /// System update period in milliseconds
+    /// </summary>
+    public int UpdatePeriod { get; set; } = 500;
+
+    /// <summary>
+    /// Minimal count of frames that should have same value (within <see cref="StabilityTolerance"/>) to treat system as stable
+    /// </summary>
+    public int MinStabilityFrameCount { get; set; } = 10;
+
+    /// <summary>
+    /// Tolerance of system stability. System temperature must differ from Target system temperature by that amount or less
+    /// </summary>
+    public double StabilityTolerance { get; set; } = 0.01;
+
     // inputs
 
     /// <summary>
@@ -40,18 +55,9 @@ public class SystemConfig
     /// Id of target heater temperature output parameter
     /// </summary>
     public int TargetHeaterTemperatureParameterId { get; set; } = 0;
+
     /// <summary>
     /// Id of heater state output parameter
     /// </summary>
     public int HeaterStateParameterId { get; set; } = 1;
-
-    /// <summary>
-    /// Minimal count of frames that should have same value (within <see cref="StabilityTolerance"/>) to treat system as stable
-    /// </summary>
-    public int MinStabilityFrameCount { get; set; } = 10;
-
-    /// <summary>
-    /// Tolerance of system stability. System temperature must differ from Target system temperature by that amount or less
-    /// </summary>
-    public double StabilityTolerance { get; set; } = 0.01;
 }

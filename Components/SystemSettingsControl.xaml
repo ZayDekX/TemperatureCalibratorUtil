@@ -16,6 +16,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -36,6 +37,8 @@
                 </Style>
             </TextBlock.Style>
         </TextBlock>
-        <Button Grid.Row="4" Grid.ColumnSpan="2" Command="{Binding StartButtonCommand}" Content="{Binding StartButtonText}"/>
+        <Label Grid.Row="4" Grid.Column="0" Content="Period"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Period}"/>
+        <Button Grid.Row="5" Grid.ColumnSpan="2" Command="{Binding StartButtonCommand}" Content="{Binding StartButtonText}"/>
     </Grid>
 </UserControl>

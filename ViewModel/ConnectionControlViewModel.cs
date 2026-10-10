@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using TemperatureCalibratorUtil.Configuration;
 using TemperatureCalibratorUtil.Model;
 
@@ -22,6 +23,8 @@ public partial class ConnectionControlViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ConnectionStatus))]
+    [NotifyPropertyChangedFor(nameof(ToggleConnectionCommand))]
+    [NotifyPropertyChangedFor(nameof(ToggleConnectionText))]
     public partial bool IsDeviceConnected { get; set; }
 
     [ObservableProperty]
@@ -61,19 +64,19 @@ public partial class ConnectionControlViewModel : ObservableObject
         }
     }
 
-    public int Period
+    public IRelayCommand ToggleConnectionCommand => IsDeviceConnected ? DisconnectCommand : ConnectCommand;
+    public string ToggleConnectionText => IsDeviceConnected ? "Disconnect" : "Connect";
+
+    [RelayCommand]
+    public void Connect()
     {
-        get => _config.Period;
-        set
-        {
-            if (value == _config.Period)
-            {
-                return;
-            }
-            OnPropertyChanging(nameof(Period));
-            _config.Period = value;
-            OnPropertyChanged(nameof(Period));
-        }
+        _runner.Device.Connect();
+    }
+
+    [RelayCommand]
+    public void Disconnect()
+    {
+        _runner.Device.Disconnect();
     }
 
     private void OnConnected()

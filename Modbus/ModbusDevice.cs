@@ -1,19 +1,15 @@
-﻿using Microsoft.Extensions.Hosting;
-using TemperatureCalibratorUtil.Configuration;
+﻿using TemperatureCalibratorUtil.Configuration;
 
 namespace TemperatureCalibratorUtil.Modbus;
 
 /// <summary>
 /// Represents remote modbus device
 /// </summary>
-/// <remarks>
-/// When active performs automatic polling of connected device
-/// </remarks>
-public class ModbusDevice : BackgroundService
+public sealed class ModbusDevice : IDisposable
 {
-    public ModbusDevice(DeviceConfig config, DeviceParameterConfig parameters)
+    public ModbusDevice(DeviceConfig connectionConfig, DeviceParameterConfig parameters)
     {
-        _config = config;
+        _deviceConfig = connectionConfig;
 
         // order by device and address
         _inputInfo = [.. parameters.Input
@@ -23,22 +19,24 @@ public class ModbusDevice : BackgroundService
             .Select(x => ((byte)x.Device, (ushort)x.Address))
         ];
 
-        _values = new ushort[_inputInfo.Length];
+        _inputBuffer = new ushort[_inputInfo.Length];
     }
 
-    private (byte deviceId, ushort address)[] _inputInfo;
+    private readonly DeviceConfig _deviceConfig;
+    private readonly (byte deviceId, ushort address)[] _inputInfo;
 
-    private DeviceConfig _config;
+    private readonly ushort[] _inputBuffer = new ushort[8];
 
-    private ushort[] _values = new ushort[8];
-
-    private ModbusConnection _connection = new();
+    private readonly ModbusConnection _connection = new();
 
     /// <summary>
     /// Input buffer with read values
     /// </summary>
-    public ReadOnlySpan<ushort> Inputs => _values;
+    public ReadOnlySpan<ushort> InputBuffer => _inputBuffer;
 
+    /// <summary>
+    /// Determines whether connection to Modbus device exists
+    /// </summary>
     public bool IsConnected => _connection.Connected;
 
     /// <summary>
@@ -56,55 +54,51 @@ public class ModbusDevice : BackgroundService
     /// </summary>
     public event Action<Exception>? Error;
 
-    public override Task StartAsync(CancellationToken cancellationToken)
+    public void Connect()
     {
-        EnsureConnected();
-
-        return base.StartAsync(cancellationToken);
-    }
-
-    private void EnsureConnected()
-    {
-        if (IsConnected)
+        if(IsConnected)
         {
             return;
         }
 
-        _connection.Connect(_config.Host, _config.Port);
-
-        if (!IsConnected)
+        _connection.Connect(_deviceConfig.Host, _deviceConfig.Port);
+        if(IsConnected)
         {
-            throw new Exception("Failed to connect to remote host");
+            Connected?.Invoke();
         }
-
-        Connected?.Invoke();
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public void Disconnect()
     {
         if(!IsConnected)
         {
-            Disconnected?.Invoke();
             return;
         }
 
-        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_config.Period));
+        _connection.Disconnect();
+        if(!IsConnected)
+        {
+            Disconnected?.Invoke();
+        }
+    }
+
+    public void Read()
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
         try
         {
-            while (await timer.WaitForNextTickAsync(stoppingToken))
-            {
-                var pos = 0;
-                var valueSpan = _values.AsSpan();
-                
-                // straightforward implementation
-                // main downside is that creates a lot of requests to remote device, which is very critical on RTU with many devices on one bus
-                foreach (var (deviceId, address) in _inputInfo)
-                {
-                    _connection.Master!.ReadInputRegisters(deviceId, address, 1).CopyTo(valueSpan[pos..]);
-                    pos++;
-                }
+            var valueSpan = _inputBuffer.AsSpan();
 
-                OnRead();
+            // straightforward implementation
+            // main downside is that creates a lot of requests to remote device, which is very critical on RTU with many devices on one bus
+            for (var i = 0; i < _inputInfo.Length; i++)
+            {
+                var (deviceId, address) = _inputInfo[i];
+                _connection.Master!.ReadInputRegisters(deviceId, address, 1).CopyTo(valueSpan[i..]);
             }
         }
         catch (Exception ex)
@@ -113,37 +107,30 @@ public class ModbusDevice : BackgroundService
         }
     }
 
-    private void OnError(Exception ex)
-    {
-        Error?.Invoke(ex);
-    }
-
-    private void OnRead()
-    {
-        Read?.Invoke();
-    }
-
     public void Write(ParameterConfig parameter, ushort value)
     {
-        if(!IsConnected)
+        if (!IsConnected)
         {
             return;
         }
 
         try
         {
-            _connection.Master?.WriteSingleRegister(parameter.Device, parameter.Address, value);
+            _connection.Master!.WriteSingleRegister(parameter.Device, parameter.Address, value);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             OnError(ex);
         }
     }
 
-    public event Action? Read; // in production-grade app there would be much more suitable something like "Weak Reference Event" with lazy init. Applicable to all events in this app
-
-    public override void Dispose()
+    public void Dispose()
     {
         _connection.Dispose();
+    }
+
+    private void OnError(Exception ex)
+    {
+        Error?.Invoke(ex);
     }
 }

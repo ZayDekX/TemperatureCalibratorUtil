@@ -16,7 +16,7 @@ public partial class MainWindowViewModel : ObservableObject
         ConnectionControl = new(_runner, config.Device);
         SystemControl = new(_runner, config.System);
 
-        _runner.Device.Read += OnRead;
+        _runner.Updated += OnUpdate;
     }
 
     [ObservableProperty]
@@ -30,16 +30,16 @@ public partial class MainWindowViewModel : ObservableObject
     /// </summary>
     public IEnumerable<ChartViewModel> Graphs { get; }
 
-    private void OnRead()
+    private void OnUpdate()
     {
         var time = DateTime.Now;
 
         foreach (var graph in Graphs)
         {
-            graph.AddPoint(time, _runner.Device.Inputs[graph.ParameterId]);
+            graph.AddPoint(time, _runner.Device.InputBuffer[graph.ParameterId]);
             if (graph.ErrorId >= 0)
             {
-                graph.HasError = _runner.Device.Inputs[graph.ErrorId] is not 0;
+                graph.HasError = _runner.Device.InputBuffer[graph.ErrorId] is not 0;
             }
         }
     }

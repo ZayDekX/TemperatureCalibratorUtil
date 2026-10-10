@@ -37,6 +37,22 @@ public partial class SystemControlViewModel : ObservableObject
 
     public IRelayCommand StartButtonCommand => IsRunning ? StopCommand : StartCommand;
 
+    public int Period
+    {
+        get => _runner.UpdatePeriod;
+        set
+        {
+            if (value == _runner.UpdatePeriod)
+            {
+                return;
+            }
+            OnPropertyChanging(nameof(Period));
+            _runner.UpdatePeriod = value;
+            _config.UpdatePeriod = value;
+            OnPropertyChanged(nameof(Period));
+        }
+    }
+
     public double TargetTemperature
     {
         get => _config.TargetTemperature;
@@ -54,16 +70,16 @@ public partial class SystemControlViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Start()
+    private async Task Start(CancellationToken cancellationToken)
     {
-        _runner.Start();
+        await _runner.StartAsync(cancellationToken);
         IsRunning = true;
     }
 
     [RelayCommand]
-    public void Stop()
+    public async Task Stop(CancellationToken cancellationToken)
     {
-        _runner.Stop();
+        await _runner.StopAsync(cancellationToken);
         IsRunning = false;
     }
 

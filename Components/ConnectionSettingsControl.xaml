@@ -23,10 +23,8 @@
         <Label     Grid.Row="0" Grid.Column="0" Content="Host"/>
         <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Host}" IsEnabled="{Binding IsNotRunning}"/>
         <Label     Grid.Row="1" Grid.Column="0" Content="Port"/>
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Port}" IsEnabled="{Binding IsRunning}"/>
-        <Label     Grid.Row="2" Grid.Column="0" Content="Period"/>
-        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Period}"/>
-        <TextBlock Margin="0,8" Grid.Row="3">Status: <TextBlock Text="{Binding ConnectionStatus}">
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Port}" IsEnabled="{Binding IsNotRunning}"/>
+        <TextBlock Margin="0,8" Grid.Row="2">Status: <TextBlock Text="{Binding ConnectionStatus}">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Foreground" Value="{x:Static root:AppColors.OkBrush}"/>
@@ -39,5 +37,6 @@
                 </TextBlock.Style>
             </TextBlock>
         </TextBlock>
+        <Button Grid.Row="3" Grid.ColumnSpan="2" Command="{Binding ToggleConnectionCommand}" Content="{Binding ToggleConnectionText}"/>
     </Grid>
 </UserControl>

@@ -44,7 +44,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _runner.Stop();
+        _runner.StopAsync(CancellationToken.None).Wait();
         base.OnExit(e);
     }
 }
