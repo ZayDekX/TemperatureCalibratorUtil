@@ -13,13 +13,13 @@ public class SystemRunner
 
         Device.Read += OnRead;
 
-        _parameterConfig = config.Parameters;
-        _systemConfig = config.System;
+        _targetHeaterTempParameter = config.Parameters.Output[config.System.TargetHeaterTemperatureParameterId];
+        _heaterStateParameter = config.Parameters.Output[config.System.HeaterStateParameterId];
     }
 
     private long _lastStamp;
-    private readonly DeviceParameterConfig _parameterConfig;
-    private readonly SystemConfig _systemConfig;
+    private readonly ParameterConfig _targetHeaterTempParameter;
+    private readonly ParameterConfig _heaterStateParameter;
 
     public SystemModel System { get; set; }
     public ModbusDevice Device { get; set; }
@@ -38,26 +38,38 @@ public class SystemRunner
         System.Update(Device.Inputs, Stopwatch.GetElapsedTime(_lastStamp, stamp).TotalSeconds);
         _lastStamp = stamp;
 
-        Device.Write([(ushort)(System.TargetHeaterTemperature * _parameterConfig.Output[_systemConfig.TargetHeaterTemperatureParameterId].Multiplier), 1]);
+        Device.Write(_targetHeaterTempParameter, (ushort)(System.TargetHeaterTemperature * _targetHeaterTempParameter.Multiplier));
     }
 
     /// <summary>
-    /// Starts system
+    /// Start system
     /// </summary>
     public void Start()
     {
         var startSource = new CancellationTokenSource();
         Device.StartAsync(startSource.Token);
+        EnableHeater();
         Started?.Invoke();
     }
 
+    public void EnableHeater()
+    {
+        Device.Write(_heaterStateParameter, 1);
+    }
+
+    public void DisableHeater()
+    {
+        Device.Write(_heaterStateParameter, 0);
+    }
+
     /// <summary>
-    /// Stops system
+    /// Stop system
     /// </summary>
     public void Stop()
     {
         var stopSource = new CancellationTokenSource();
-        Device.Write([0, 0]);
+
+        DisableHeater();
         Device.StopAsync(stopSource.Token).Wait();
         Stopped?.Invoke();
     }

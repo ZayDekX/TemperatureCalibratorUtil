@@ -8,12 +8,12 @@ public class ParameterConfig
     /// <summary>
     /// Id of device on Modbus master
     /// </summary>
-    public int Device { get; set; }
+    public byte Device { get; set; }
 
     /// <summary>
     /// Cell on device
     /// </summary>
-    public int Address { get; set; }
+    public ushort Address { get; set; }
 
     /// <summary>
     /// Name of parameter

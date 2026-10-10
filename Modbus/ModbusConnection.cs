@@ -34,6 +34,8 @@ public class ModbusConnection : IDisposable
     /// </summary>
     public ushort Port { get; private set; }
 
+    private Lock _connectionLock = new();
+
     /// <summary>
     /// Connect to Modbus device
     /// </summary>
@@ -41,16 +43,19 @@ public class ModbusConnection : IDisposable
     /// <param name="port"></param>
     public void Connect(string host, ushort port)
     {
-        if(Connected)
+        lock (_connectionLock)
         {
-            return;
+            if (Connected)
+            {
+                return;
+            }
+
+            Host = host;
+            Port = port;
+
+            Client = new(Host, Port);
+            Master = _factory.CreateMaster(Client);
         }
-
-        Host = host;
-        Port = port;
-
-        Client = new(Host, Port);
-        Master = _factory.CreateMaster(Client);
     }
 
     /// <summary>
@@ -58,13 +63,16 @@ public class ModbusConnection : IDisposable
     /// </summary>
     public void Disconnect()
     {
-        Master?.Dispose();
-        Client?.Dispose();
+        lock (_connectionLock)
+        {
+            Master?.Dispose();
+            Client?.Dispose();
 
-        Master = null;
-        Client = null;
-        Host = null;
-        Port = 0;
+            Master = null;
+            Client = null;
+            Host = null;
+            Port = 0;
+        }
     }
 
     /// <summary>
@@ -72,7 +80,7 @@ public class ModbusConnection : IDisposable
     /// </summary>
     public void Reconnect()
     {
-        if(!Connected || Host is null || Port is 0)
+        if (!Connected || Host is null || Port is 0)
         {
             return;
         }

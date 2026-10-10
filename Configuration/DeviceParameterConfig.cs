@@ -23,7 +23,7 @@ public class DeviceParameterConfig
     /// Parameters that are written to master
     /// </summary>
     public List<ParameterConfig> Output { get; set; } = [
-        new() {Device = 4, Address = 1, Multiplier = 10, Name = "T_heater_target"},
-        new() {Device = 4, Address = 2, Multiplier = 1, Name = "heater_on"},
+        new() {Device = 5, Address = 0, Multiplier = 10, Name = "T_heater_target"},
+        new() {Device = 5, Address = 1, Multiplier = 1, Name = "heater_on"},
     ];
 }

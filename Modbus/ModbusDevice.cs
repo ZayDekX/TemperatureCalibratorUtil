@@ -6,6 +6,9 @@ namespace TemperatureCalibratorUtil.Modbus;
 /// <summary>
 /// Represents remote modbus device
 /// </summary>
+/// <remarks>
+/// When active performs automatic polling of connected device
+/// </remarks>
 public class ModbusDevice : BackgroundService
 {
     public ModbusDevice(DeviceConfig config, DeviceParameterConfig parameters)
@@ -48,16 +51,42 @@ public class ModbusDevice : BackgroundService
     /// </summary>
     public event Action? Disconnected;
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _connection.Connect(_config.Host, _config.Port);
+    /// <summary>
+    /// Invoked when some error occured
+    /// </summary>
+    public event Action<Exception>? Error;
 
-        if (!_connection.Connected)
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        EnsureConnected();
+
+        return base.StartAsync(cancellationToken);
+    }
+
+    private void EnsureConnected()
+    {
+        if (IsConnected)
         {
             return;
         }
 
+        _connection.Connect(_config.Host, _config.Port);
+
+        if (!IsConnected)
+        {
+            throw new Exception("Failed to connect to remote host");
+        }
+
         Connected?.Invoke();
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if(!IsConnected)
+        {
+            Disconnected?.Invoke();
+            return;
+        }
 
         var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_config.Period));
         try
@@ -71,7 +100,7 @@ public class ModbusDevice : BackgroundService
                 // main downside is that creates a lot of requests to remote device, which is very critical on RTU with many devices on one bus
                 foreach (var (deviceId, address) in _inputInfo)
                 {
-                    _connection.Master.ReadInputRegisters(deviceId, address, 1).CopyTo(valueSpan[pos..]);
+                    _connection.Master!.ReadInputRegisters(deviceId, address, 1).CopyTo(valueSpan[pos..]);
                     pos++;
                 }
 
@@ -80,12 +109,13 @@ public class ModbusDevice : BackgroundService
         }
         catch (Exception ex)
         {
-            if(_connection.Connected)
-            {
-                return;
-            }
-            Disconnected?.Invoke();
+            OnError(ex);
         }
+    }
+
+    private void OnError(Exception ex)
+    {
+        Error?.Invoke(ex);
     }
 
     private void OnRead()
@@ -93,9 +123,21 @@ public class ModbusDevice : BackgroundService
         Read?.Invoke();
     }
 
-    public void Write(ushort[] values)
+    public void Write(ParameterConfig parameter, ushort value)
     {
-        _connection.Master?.WriteMultipleRegisters(5, 0, values);
+        if(!IsConnected)
+        {
+            return;
+        }
+
+        try
+        {
+            _connection.Master?.WriteSingleRegister(parameter.Device, parameter.Address, value);
+        }
+        catch(Exception ex)
+        {
+            OnError(ex);
+        }
     }
 
     public event Action? Read; // in production-grade app there would be much more suitable something like "Weak Reference Event" with lazy init. Applicable to all events in this app
