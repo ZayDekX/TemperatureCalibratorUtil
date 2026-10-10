@@ -4,14 +4,14 @@ namespace TemperatureCalibratorUtil.Model;
 
 public class SystemModel
 {
-    private int[] _index;
-    private SystemConfig _config;
-    private PIDController _controller;
-    private DeviceParameterConfig _parameters;
+    private readonly int[] _index;
+    private readonly SystemConfig _config;
+    private readonly PIDController _controller;
+    private readonly DeviceParameterConfig _parameters;
 
-    public SystemModel(SystemConfig processorConfig, DeviceParameterConfig parameters)
+    public SystemModel(SystemConfig config, DeviceParameterConfig parameters)
     {
-        _config = processorConfig;
+        _config = config;
         _controller = new(_config.PidController);
         _parameters = parameters;
 
@@ -33,9 +33,19 @@ public class SystemModel
         }
     }
 
+    /// <summary>
+    /// Target temperature that system should reach
+    /// </summary>
     public double TargetTemperature => _config.TargetTemperature;
+
+    /// <summary>
+    /// Target heater temperature to be applied
+    /// </summary>
     public double TargetHeaterTemperature { get; set; }
 
+    /// <summary>
+    /// Determines whether the system temperature has reached <see cref="TargetTemperature"/> and stabilized on that value
+    /// </summary>
     public bool Stable
     {
         get; 
@@ -76,6 +86,7 @@ public class SystemModel
         else
         {
             Stable = false;
+            _stableFrames = 0;
         }
 
         if (_stableFrames >= _config.MinStabilityFrameCount)

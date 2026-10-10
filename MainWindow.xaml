@@ -4,70 +4,29 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TemperatureCalibratorUtil"
-        xmlns:vm="clr-namespace:TemperatureCalibratorUtil.ViewModel"
+        xmlns:vm="clr-namespace:TemperatureCalibratorUtil.ViewModel" xmlns:components="clr-namespace:TemperatureCalibratorUtil.Components"
         mc:Ignorable="d"
         Title="MainWindow" Width="800"
         Height="Auto"
         d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}">
 
-    <Grid>
+    <Grid Height="Auto">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <ItemsControl Grid.Column="0" ItemsSource="{Binding Graphs}">
+        <ItemsControl Grid.Column="0" ItemsSource="{Binding Graphs}" Height="Auto">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <local:ValueGraph DataContext="{Binding}"/>
+                    <local:Chart DataContext="{Binding}"/>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Grid Grid.Column="1" MinWidth="150">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid Grid.Row="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Label     Grid.Row="0" Grid.Column="0" Content="Host"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Config.Device.Host}" IsEnabled="{Binding IsNotRunning}"/>
-                <Label     Grid.Row="1" Grid.Column="0" Content="Port"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Config.Device.Port}" IsEnabled="{Binding IsRunning}"/>
-                <Label     Grid.Row="2" Grid.Column="0" Content="Period"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Config.Device.Period}"/>
-                <TextBlock Margin="0,8" Grid.Row="3">Status: <TextBlock Text="{Binding ConnectionStatus}" Foreground="{Binding ConnectionStatusColor}" /></TextBlock>
-            </Grid>
-            <Grid Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Label Grid.Row="0" Grid.Column="0" Content="T_target"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Config.System.TargetTemperature, StringFormat=F2}"/>
-                <Slider Grid.Row="1" Grid.ColumnSpan="2" Minimum="0" Maximum="100" Value="{Binding Config.System.TargetTemperature}"/>
-                <TextBlock Grid.Row="2" Grid.RowSpan="2" Text="{Binding Stability}" Foreground="{Binding StabilityColor}" />
-            </Grid>
-            <Button Grid.Row="3" Command="{Binding StartButtonCommand}" Content="{Binding StartButtonText}"/>
-        </Grid>
+        <ItemsControl Grid.Column="1" MinWidth="150">
+            <components:ConnectionSettingsControl Grid.Row="0" DataContext="{Binding ConnectionControl}"/>
+            <Separator/>
+            <components:SystemSettingsControl Grid.Row="1" DataContext="{Binding SystemControl}"/>
+        </ItemsControl>
     </Grid>
 </Window>

@@ -3,11 +3,11 @@
 namespace TemperatureCalibratorUtil;
 
 /// <summary>
-/// Interaction logic for ValueGraph.xaml
+/// Interaction logic for Chart.xaml
 /// </summary>
-public partial class ValueGraph : UserControl
+public partial class Chart : UserControl
 {
-    public ValueGraph()
+    public Chart()
     {
         InitializeComponent();
     }

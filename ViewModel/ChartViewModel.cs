@@ -1,47 +1,34 @@
 ﻿using System.Collections.ObjectModel;
-using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiveChartsCore.Defaults;
+using TemperatureCalibratorUtil.Configuration;
 
 namespace TemperatureCalibratorUtil.ViewModel;
 
-public static class Colors
+public partial class ChartViewModel : ObservableObject
 {
-    public static readonly SolidColorBrush ErrorBrush = new(Color.FromRgb(172, 51, 46));
-    public static readonly SolidColorBrush OkBrush = new(Color.FromRgb(78, 201, 176));
-}
-
-public partial class ValueGraphViewModel : ObservableObject
-{
-    public string Name { get; set; }
-    public int ParameterId { get; set; }
+    private ChartConfig _config;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StateBrush))]
     public partial bool HasError { get; set; }
 
-    public Brush StateBrush => HasError ? Colors.ErrorBrush : Colors.OkBrush;
+    public string Name => _config.Name;
+    public int ParameterId => _config.ParameterId;
 
-    public ValueGraphViewModel()
+    public ChartViewModel(ChartConfig config, double multiplier)
     {
-        var count = 250;
-        var time = DateTime.Now;
-        Values = [];
+        _config = config;
+        Multiplier = multiplier;
 
-        for (var i = 0; i < count; i++)
+        Separators = new(new double[_config.SeparatorCount]);
+
+        var time = DateTime.Now;
+
+        Values = [];
+        for (var i = 0; i < _config.PointCount; i++)
         {
             Values.Add(new(time, null));
         }
-
-        Separators = new([0, 0, 0, 0, 0, 0]);
-    }
-
-    public ValueGraphViewModel(string name, int parameterId, int errorId, double multiplier) : this()
-    {
-        Name = name;
-        ParameterId = parameterId;
-        Multiplier = multiplier;
-        ErrorId = errorId;
     }
 
     public ObservableCollection<double> Separators { get; set; }
@@ -52,18 +39,18 @@ public partial class ValueGraphViewModel : ObservableObject
 
     public Func<DateTime, string> LabelsFormatter { get; } = Formatter;
 
-    public object Sync { get; } = new object();
+    public object Sync { get; } = new();
 
-    public double Multiplier { get; set; }
+    public double Multiplier { get; }
 
-    public int ErrorId { get; set; }
+    public int ErrorId => _config.ErrorId;
 
     public void AddPoint(DateTime time, double value)
     {
         // the best way to avoid unnecessary allocations would be just to move all points towards beginning and write first point to the end of list
-        // or custom collection with rolling beginning
-        // but since LiveCharts doesn't like movement of points (basically ignores), there is a ton of updates
-        // in any case current solution causes a bit less of GC pressure than adding new point and removing first one
+        // or custom collection with rolling start position
+        // but since LiveCharts doesn't like movement of points (basically ignores), a ton of updates is kinda mandatory
+        // in any case current solution causes a bit less of GC pressure than adding new point and removing first one (as in LiveCharts example)
 
         lock (Sync)
         {
@@ -83,9 +70,13 @@ public partial class ValueGraphViewModel : ObservableObject
 
             var separatorCount = Separators.Count;
 
+            var displayedTime = lastPoint.DateTime - Values[0].DateTime;
+            var displayedSeconds = displayedTime.TotalSeconds;
+            var step = displayedSeconds / 5;
+
             for (var i = 0; i < separatorCount; i++)
             {
-                Separators[i] = time.AddSeconds(-5 * (separatorCount - i)).Ticks;
+                Separators[i] = time.AddSeconds(-step * (separatorCount - i)).Ticks;
             }
             OnPropertyChanged(nameof(CurrentValue));
         }

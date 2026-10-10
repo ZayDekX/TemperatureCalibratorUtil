@@ -31,9 +31,21 @@ public class ModbusDevice : BackgroundService
 
     private ModbusConnection _connection = new();
 
+    /// <summary>
+    /// Input buffer with read values
+    /// </summary>
     public ReadOnlySpan<ushort> Inputs => _values;
 
+    public bool IsConnected => _connection.Connected;
+
+    /// <summary>
+    /// Invoked when device have been successfully connected
+    /// </summary>
     public event Action? Connected;
+
+    /// <summary>
+    /// Invoked when connection has been lost or terminated
+    /// </summary>
     public event Action? Disconnected;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -86,7 +98,7 @@ public class ModbusDevice : BackgroundService
         _connection.Master?.WriteMultipleRegisters(5, 0, values);
     }
 
-    public event Action? Read; // in production-grade app there would be much more suitable something like "Weak Reference Event" with lazy init
+    public event Action? Read; // in production-grade app there would be much more suitable something like "Weak Reference Event" with lazy init. Applicable to all events in this app
 
     public override void Dispose()
     {
