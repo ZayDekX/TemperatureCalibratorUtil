@@ -11,14 +11,7 @@ public sealed class ModbusDevice : IDisposable
     {
         _deviceConfig = connectionConfig;
 
-        // order by device and address
-        _inputInfo = [.. parameters.Input
-            .GroupBy(x => x.Device)
-            .OrderBy(x => x.Key)
-            .SelectMany(x => x.OrderBy(p => p.Address))
-            .Select(x => ((byte)x.Device, (ushort)x.Address))
-        ];
-
+        _inputInfo = [.. parameters.Input.Select(x => ((byte)x.Device, (ushort)x.Address))];
         _inputBuffer = new ushort[_inputInfo.Length];
     }
 

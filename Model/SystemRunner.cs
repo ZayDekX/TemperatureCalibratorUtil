@@ -93,5 +93,12 @@ public class SystemRunner : BackgroundService
     {
         Device.Write(_heaterStateParameter, 0);
     }
+}
 
+public class ValueProcessor
+{
+    public ValueProcessor(DeviceParameterConfig parameters)
+    {
+        
+    }
 }

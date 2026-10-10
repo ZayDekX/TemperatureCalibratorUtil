@@ -14,23 +14,6 @@ public class SystemModel
         _config = config;
         _controller = new(_config.PidController);
         _parameters = parameters;
-
-        // order and index parameters
-        var rawIndex = parameters.Input
-            .Select((x, i) => (id: i, config: x))
-            .GroupBy(x => x.config.Device)
-            .SelectMany(x => x.OrderBy(p => p.config.Address).Select(p => p.id))
-            .ToArray();
-
-        // save ids of parameters in fetcher buffer
-        _index = new int[rawIndex.Length];
-
-        var i = 0;
-        foreach (var idx in rawIndex)
-        {
-            _index[idx] = i;
-            i++;
-        }
     }
 
     /// <summary>
@@ -97,6 +80,6 @@ public class SystemModel
 
     private double GetValue(ReadOnlySpan<ushort> inputs, int id)
     {
-        return inputs[_index[id]] / _parameters.Input[id].Multiplier;
+        return inputs[id] / _parameters.Input[id].Multiplier;
     }
 }
