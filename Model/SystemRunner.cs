@@ -52,6 +52,11 @@ public class SystemRunner : BackgroundService
     public ModbusDevice Device { get; set; }
     public ValueProcessor Processor { get; }
 
+    /// <summary>
+    /// Determines whether the system is currently running
+    /// </summary>
+    public bool IsRunning { get; private set; }
+
     public event Action? Started;
     public event Action? Stopped;
     public event Action? Updated;
@@ -59,6 +64,7 @@ public class SystemRunner : BackgroundService
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         EnableHeater();
+        IsRunning = true;
         Started?.Invoke();
         return base.StartAsync(cancellationToken);
     }
@@ -66,6 +72,7 @@ public class SystemRunner : BackgroundService
     public override Task StopAsync(CancellationToken cancellationToken)
     {
         DisableHeater();
+        IsRunning = false;
         Stopped?.Invoke();
         return base.StopAsync(cancellationToken);
     }

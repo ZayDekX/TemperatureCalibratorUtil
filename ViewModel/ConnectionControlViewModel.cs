@@ -65,7 +65,7 @@ public partial class ConnectionControlViewModel : ObservableObject
     public string ToggleConnectionText => IsConnected ? "Disconnect" : "Connect";
 
     [RelayCommand]
-    public Task Connect()
+    public void Connect()
     {
         try
         {
@@ -73,15 +73,28 @@ public partial class ConnectionControlViewModel : ObservableObject
         }
         catch
         {
-            MessageBox.Show("Failed to connect to system");
+            MessageBox.Show(
+                "Failed to connect to system",
+                caption: "Error",
+                button: MessageBoxButton.OK,
+                icon: MessageBoxImage.Error
+            );
         }
-
-        return Task.CompletedTask;
     }
 
     [RelayCommand]
     public void Disconnect()
     {
+        if(_runner.IsRunning)
+        {
+            MessageBox.Show(
+                "Stop system before disconnect", 
+                caption: "Warning", 
+                button: MessageBoxButton.OK, 
+                MessageBoxImage.Warning
+            );
+            return;
+        }
         _runner.Device.Disconnect();
     }
 

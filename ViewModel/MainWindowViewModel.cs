@@ -19,11 +19,27 @@ public partial class MainWindowViewModel : ObservableObject
 
         _runner.Updated += OnUpdate;
         _runner.Device.Disconnected += OnDisconnected;
+        _runner.Device.Error += OnError;
+    }
+
+    private void OnError(Exception exception)
+    {
+        MessageBox.Show(
+            exception.Message,
+            caption: "An error occured!",
+            button: MessageBoxButton.OK,
+            icon: MessageBoxImage.Error
+        );
     }
 
     private void OnDisconnected()
     {
-        MessageBox.Show("Remote device has been disconnected");
+        MessageBox.Show(
+            "Remote device has been disconnected",
+            caption: "Warning",
+            button: MessageBoxButton.OK,
+            icon: MessageBoxImage.Warning
+        );
     }
 
     [ObservableProperty]
